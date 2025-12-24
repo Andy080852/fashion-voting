@@ -290,7 +290,6 @@
             font-weight: bold;
         }
 
-        /* 🎯 1:1 正方形顯示 */
         .images-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -396,6 +395,54 @@
         .token-status.not-configured {
             background: #ffcdd2;
             color: #c62828;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: white;
+            border-radius: 15px;
+            margin: 15px 0;
+            border: 3px solid #4ecdc4;
+        }
+
+        .toggle-label {
+            font-weight: bold;
+            color: #ff6b6b;
+            font-size: 16px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch.active::after {
+            left: 33px;
         }
 
         .file-input-wrapper {
@@ -567,6 +614,48 @@
             max-width: 600px;
         }
 
+        .leaderboard-notice {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 3px solid #ff9800;
+            text-align: center;
+        }
+
+        .leaderboard-notice-title {
+            color: #e65100;
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .leaderboard-notice-title::before {
+            content: '⚠️ ';
+        }
+
+        .leaderboard-notice-text {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .leaderboard-update-time {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 12px 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 3px solid #2196f3;
+            text-align: center;
+            color: #1565c0;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .leaderboard-update-time::before {
+            content: '🕐 ';
+        }
+
         .leaderboard-item {
             display: flex;
             align-items: center;
@@ -716,7 +805,6 @@
                 #ffe66d 40px,
                 #ffe66d 60px
             );
-            animation: lights 2s ease-in-out infinite;
             z-index: 1000;
         }
 
@@ -833,7 +921,7 @@
                         theme: '🎄 Chiikawa 聖誕特輯 ❄️',
                         maxVotes: 5,
                         maxRefreshes: 15,
-                        showLeaderboardImages: false
+                        showLeaderboardImages: true
                     };
                     await setDoc(doc(db, 'settings', 'config'), settings);
                 }
@@ -885,34 +973,22 @@
             }
 
             const data = await response.json();
-            const imageUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${filePath}`;
-            
             return {
-                url: imageUrl,
+                url: `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${filePath}`,
                 sha: data.content.sha,
                 path: filePath
             };
         }
 
         async function deleteFromGitHub(imagePath) {
-            if (!githubToken || !imagePath) {
-                return;
-            }
-
+            if (!githubToken || !imagePath) return;
             try {
                 const getResponse = await fetch(
                     `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${imagePath}`,
-                    {
-                        headers: {
-                            'Authorization': `token ${githubToken}`,
-                        }
-                    }
+                    { headers: { 'Authorization': `token ${githubToken}` } }
                 );
-
                 if (!getResponse.ok) return;
-
                 const fileData = await getResponse.json();
-
                 await fetch(
                     `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${imagePath}`,
                     {
@@ -955,7 +1031,6 @@
                 showError('請輸入姓名');
                 return;
             }
-
             try {
                 const userDoc = await getDoc(doc(db, 'users', userName));
                 if (userDoc.exists()) {
@@ -996,12 +1071,10 @@
         window.adminLogin = async function() {
             const email = document.getElementById('adminEmail').value.trim();
             const password = document.getElementById('adminPassword').value;
-
             if (!email || !password) {
                 showError('請輸入 Email 和密碼');
                 return;
             }
-
             try {
                 await signInWithEmailAndPassword(auth, email, password);
             } catch (error) {
@@ -1032,14 +1105,11 @@
                 id: doc.id,
                 ...doc.data()
             }));
-
             const app = document.getElementById('app');
             app.className = 'container';
             app.innerHTML = `
                 <h1>🎄 投票系統 🎅</h1>
-                <div class="user-info">
-                    ${currentUser.name}
-                </div>
+                <div class="user-info">${currentUser.name}</div>
                 <div class="stats">
                     <div class="stat-item">
                         <div class="stat-number">${currentUser.votesRemaining}</div>
@@ -1054,23 +1124,19 @@
                 <button onclick="window.refreshPair()">🔄 換一對</button>
                 <button class="secondary-btn" onclick="window.backToLogin()">↩️ 登出</button>
             `;
-
             loadNewPair();
         }
 
         function loadNewPair() {
             const votingArea = document.getElementById('votingArea');
-
             if (currentUser.votesRemaining <= 0) {
                 votingArea.innerHTML = '<div class="error">你的票數已用完！</div>';
                 return;
             }
-
             if (submissions.length < 2) {
                 votingArea.innerHTML = '<div class="error">作品數量不足，無法進行投票</div>';
                 return;
             }
-
             let pair;
             let attempts = 0;
             do {
@@ -1082,7 +1148,6 @@
                 currentUser.votedPairs.includes(`${pair[1].id}-${pair[0].id}`) &&
                 attempts < 10
             );
-
             votingArea.innerHTML = `
                 <div class="images-container">
                     <div class="image-option" onclick="window.vote('${pair[0].id}', '${pair[1].id}')">
@@ -1103,23 +1168,18 @@
                     timestamp: timestamp,
                     date: new Date(timestamp).toLocaleString('zh-TW')
                 };
-
                 await updateDoc(doc(db, 'submissions', winnerId), {
                     score: increment(1),
                     votes: arrayUnion(voteRecord)
                 });
-
                 currentUser.votesRemaining--;
                 currentUser.votedPairs.push(`${winnerId}-${loserId}`);
                 await updateDoc(doc(db, 'users', currentUser.name), {
                     votesRemaining: currentUser.votesRemaining,
                     votedPairs: currentUser.votedPairs
                 });
-
                 showSuccess('投票成功！');
-                setTimeout(() => {
-                    showVotingPage();
-                }, 1000);
+                setTimeout(() => showVotingPage(), 1000);
             } catch (error) {
                 console.error('投票失敗:', error);
                 showError('投票失敗，請重試');
@@ -1131,7 +1191,6 @@
                 showError('刷新次數已用完！');
                 return;
             }
-
             try {
                 currentUser.refreshesRemaining--;
                 await updateDoc(doc(db, 'users', currentUser.name), {
@@ -1145,16 +1204,12 @@
         };
 
         window.deleteVote = async function(submissionId, voteRecord) {
-            if (!confirm(`確定要刪除 ${voteRecord.voter} 的投票嗎？`)) {
-                return;
-            }
-
+            if (!confirm(`確定要刪除 ${voteRecord.voter} 的投票嗎？`)) return;
             try {
                 await updateDoc(doc(db, 'submissions', submissionId), {
                     votes: arrayRemove(voteRecord),
                     score: increment(-1)
                 });
-
                 showSuccess('投票記錄已刪除！');
                 setTimeout(() => showAdminPanel(), 1000);
             } catch (error) {
@@ -1166,27 +1221,19 @@
         async function showAdminPanel() {
             const app = document.getElementById('app');
             app.className = 'container admin-container';
-
             const submissionsSnapshot = await getDocs(collection(db, 'submissions'));
-            submissions = submissionsSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-
+            submissions = submissionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             const tokenConfigured = githubToken ? 'configured' : 'not-configured';
             const tokenStatusText = githubToken ? '✓ 已設定' : '✗ 未設定';
-
             app.innerHTML = `
                 <h1>🎄 後台管理 🎅</h1>
                 <div class="user-info">
                     ${currentAdmin.email}
                     <button class="logout-btn" onclick="window.adminLogout()">登出</button>
                 </div>
-
                 <div class="setup-box">
                     <h3>GitHub Token 設定 <span class="token-status ${tokenConfigured}">${tokenStatusText}</span></h3>
                     <p>為了自動上傳圖片到 GitHub，需要設定 Personal Access Token。</p>
-                    <p>Token 會儲存在瀏覽器本地，不會上傳到伺服器。</p>
                     <div class="input-group" style="margin-top: 15px;">
                         <label>GitHub Token</label>
                         <input type="password" id="githubTokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" value="${githubToken}">
@@ -1194,7 +1241,6 @@
                     <button onclick="window.saveGitHubToken()">💾 儲存 Token</button>
                     ${githubToken ? '<button class="secondary-btn" onclick="window.clearGitHubToken()">🗑️ 清除 Token</button>' : ''}
                 </div>
-
                 <div class="admin-section">
                     <h2>主題設定</h2>
                     <div class="input-group">
@@ -1203,7 +1249,16 @@
                     </div>
                     <button onclick="window.updateTheme()">🎁 更新主題</button>
                 </div>
-
+                <div class="admin-section">
+                    <h2>排行榜設定</h2>
+                    <div class="toggle-container">
+                        <span class="toggle-label">🖼️ 排行榜顯示圖片</span>
+                        <div class="toggle-switch ${settings.showLeaderboardImages ? 'active' : ''}" onclick="window.toggleLeaderboardImages()"></div>
+                    </div>
+                    <p style="color: #666; font-size: 14px; margin-top: 10px;">
+                        ${settings.showLeaderboardImages ? '✅ 目前：顯示圖片' : '❌ 目前：不顯示圖片'}
+                    </p>
+                </div>
                 <div class="admin-section">
                     <h2>上傳作品</h2>
                     <div class="input-group">
@@ -1229,10 +1284,9 @@
                         ${githubToken ? '🎁 上傳作品' : '⚠️ 請先設定 GitHub Token'}
                     </button>
                 </div>
-
                 <div class="admin-section">
                     <h2>作品管理與投票記錄</h2>
-                    <div class="submissions-grid" id="submissionsGrid">
+                    <div class="submissions-grid">
                         ${submissions.map(sub => {
                             const votes = sub.votes || [];
                             return `
@@ -1241,7 +1295,6 @@
                                     <div class="submission-title">${sub.title}</div>
                                     <div class="submission-info">⭐ 總分數: ${sub.score || 0}</div>
                                     <div class="submission-info">📊 投票數: ${votes.length}</div>
-                                    
                                     <div class="vote-records">
                                         <h4>投票記錄</h4>
                                         ${votes.length > 0 ? votes.map(vote => `
@@ -1252,7 +1305,6 @@
                                             </div>
                                         `).join('') : '<div class="no-votes">暫無投票記錄</div>'}
                                     </div>
-                                    
                                     <button class="delete-btn" onclick="window.deleteSubmission('${sub.id}', '${sub.imagePath || ''}')">🗑️ 刪除作品</button>
                                 </div>
                             `;
@@ -1260,7 +1312,6 @@
                     </div>
                     ${submissions.length === 0 ? '<p style="text-align:center;color:#999;">暫無作品</p>' : ''}
                 </div>
-
                 <div class="admin-section">
                     <h2>排行榜管理</h2>
                     <button onclick="window.updateLeaderboard()">🔄 更新排行榜</button>
@@ -1268,18 +1319,30 @@
             `;
         }
 
+        window.toggleLeaderboardImages = async function() {
+            try {
+                settings.showLeaderboardImages = !settings.showLeaderboardImages;
+                await updateDoc(doc(db, 'settings', 'config'), {
+                    showLeaderboardImages: settings.showLeaderboardImages
+                });
+                showSuccess(settings.showLeaderboardImages ? '已開啟排行榜圖片顯示' : '已關閉排行榜圖片顯示');
+                setTimeout(() => showAdminPanel(), 1000);
+            } catch (error) {
+                console.error('更新設定失敗:', error);
+                showError('更新設定失敗');
+            }
+        };
+
         window.saveGitHubToken = function() {
             const token = document.getElementById('githubTokenInput').value.trim();
             if (!token) {
                 showError('請輸入 GitHub Token');
                 return;
             }
-
             if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
-                showError('Token 格式不正確，應該以 ghp_ 或 github_pat_ 開頭');
+                showError('Token 格式不正確');
                 return;
             }
-
             localStorage.setItem('githubToken', token);
             githubToken = token;
             showSuccess('Token 儲存成功！');
@@ -1287,10 +1350,7 @@
         };
 
         window.clearGitHubToken = function() {
-            if (!confirm('確定要清除 GitHub Token 嗎？')) {
-                return;
-            }
-
+            if (!confirm('確定要清除 GitHub Token 嗎？')) return;
             localStorage.removeItem('githubToken');
             githubToken = '';
             showSuccess('Token 已清除');
@@ -1303,7 +1363,6 @@
                 const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
                 const sizeDisplay = document.getElementById('fileSizeDisplay');
                 sizeDisplay.textContent = `檔案大小：${fileSizeMB} MB`;
-
                 if (file.size > 2 * 1024 * 1024) {
                     sizeDisplay.style.color = '#c62828';
                     sizeDisplay.textContent += ` ⚠️ 建議小於 2 MB`;
@@ -1311,7 +1370,6 @@
                     sizeDisplay.style.color = '#2e7d32';
                     sizeDisplay.textContent += ` ✓`;
                 }
-
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const preview = document.getElementById('imagePreview');
@@ -1328,11 +1386,8 @@
                 showError('請輸入主題');
                 return;
             }
-
             try {
-                await updateDoc(doc(db, 'settings', 'config'), {
-                    theme: newTheme
-                });
+                await updateDoc(doc(db, 'settings', 'config'), { theme: newTheme });
                 settings.theme = newTheme;
                 showSuccess('主題更新成功！');
                 setTimeout(() => showAdminPanel(), 1000);
@@ -1345,48 +1400,36 @@
         window.uploadSubmission = async function() {
             const title = document.getElementById('submissionTitle').value.trim();
             const imageFile = document.getElementById('submissionImage').files[0];
-
             if (!title || !imageFile) {
                 showError('請填寫標題並選擇圖片');
                 return;
             }
-
             if (!githubToken) {
                 showError('請先設定 GitHub Token');
                 return;
             }
-
             try {
                 const uploadBtn = document.getElementById('uploadBtn');
                 const progressBar = document.getElementById('uploadProgress');
                 const progressFill = document.getElementById('uploadProgressFill');
-
                 uploadBtn.disabled = true;
                 progressBar.classList.remove('hidden');
-
                 progressFill.style.width = '30%';
                 progressFill.textContent = '上傳中...';
-
                 const uploadResult = await uploadToGitHub(imageFile);
-
                 progressFill.style.width = '70%';
                 progressFill.textContent = '儲存資料...';
-
                 const timestamp = Date.now();
-                const submissionData = {
+                await setDoc(doc(db, 'submissions', `submission_${timestamp}`), {
                     title: title,
                     imageUrl: uploadResult.url,
                     imagePath: uploadResult.path,
                     score: 0,
                     votes: [],
                     createdAt: timestamp
-                };
-
-                await setDoc(doc(db, 'submissions', `submission_${timestamp}`), submissionData);
-
+                });
                 progressFill.style.width = '100%';
                 progressFill.textContent = '完成！';
-
                 showSuccess('上傳成功！');
                 setTimeout(() => showAdminPanel(), 1500);
             } catch (error) {
@@ -1398,17 +1441,10 @@
         };
 
         window.deleteSubmission = async function(id, imagePath) {
-            if (!confirm('確定要刪除這個作品嗎？這將同時刪除所有投票記錄！')) {
-                return;
-            }
-
+            if (!confirm('確定要刪除這個作品嗎？')) return;
             try {
-                if (imagePath) {
-                    await deleteFromGitHub(imagePath);
-                }
-
+                if (imagePath) await deleteFromGitHub(imagePath);
                 await deleteDoc(doc(db, 'submissions', id));
-
                 showSuccess('刪除成功！');
                 setTimeout(() => showAdminPanel(), 1000);
             } catch (error) {
@@ -1420,20 +1456,16 @@
         window.updateLeaderboard = async function() {
             try {
                 showSuccess('正在更新排行榜...');
-
                 const q = query(collection(db, 'submissions'), orderBy('score', 'desc'), limit(10));
                 const snapshot = await getDocs(q);
-
                 const leaderboard = snapshot.docs.map((doc, index) => ({
                     rank: index + 1,
                     ...doc.data()
                 }));
-
                 await setDoc(doc(db, 'settings', 'leaderboard'), {
                     data: leaderboard,
                     updatedAt: Date.now()
                 });
-
                 showSuccess('排行榜更新成功！');
             } catch (error) {
                 console.error('更新排行榜失敗:', error);
@@ -1444,10 +1476,8 @@
         window.showLeaderboard = async function() {
             try {
                 const leaderboardDoc = await getDoc(doc(db, 'settings', 'leaderboard'));
-
                 const app = document.getElementById('app');
                 app.className = 'container leaderboard-container';
-
                 if (!leaderboardDoc.exists() || !leaderboardDoc.data().data) {
                     app.innerHTML = `
                         <h1>🏆 排行榜 🎄</h1>
@@ -1456,12 +1486,30 @@
                     `;
                     return;
                 }
-
-                const leaderboard = leaderboardDoc.data().data;
+                const leaderboardData = leaderboardDoc.data();
+                const leaderboard = leaderboardData.data;
+                const updatedAt = leaderboardData.updatedAt;
                 const showImages = settings.showLeaderboardImages;
-
+                const updateTime = updatedAt ? new Date(updatedAt).toLocaleString('zh-TW', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                }) : '未知';
                 app.innerHTML = `
                     <h1>🏆 排行榜 🎄</h1>
+                    <div class="leaderboard-notice">
+                        <div class="leaderboard-notice-title">非實時更新</div>
+                        <div class="leaderboard-notice-text">
+                            排行榜數據由管理員手動更新，<br>
+                            不會即時反映最新投票結果
+                        </div>
+                    </div>
+                    <div class="leaderboard-update-time">
+                        上次更新：${updateTime}
+                    </div>
                     ${leaderboard.map(item => `
                         <div class="leaderboard-item">
                             <div class="rank">#${item.rank}</div>
@@ -1491,7 +1539,6 @@
             errorDiv.className = 'error';
             errorDiv.textContent = message;
             app.insertBefore(errorDiv, app.firstChild);
-
             setTimeout(() => errorDiv.remove(), 5000);
         }
 
@@ -1501,7 +1548,6 @@
             successDiv.className = 'success';
             successDiv.textContent = message;
             app.insertBefore(successDiv, app.firstChild);
-
             setTimeout(() => successDiv.remove(), 3000);
         }
 
