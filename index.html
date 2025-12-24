@@ -370,15 +370,15 @@
         import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-        // Firebase 配置
+        // Firebase 配置 - 使用正確的配置
         const firebaseConfig = {
-  apiKey: "AIzaSyBVlLiHWQQ7Sr-d_Rwdavwjojp2IXH_Gug",
-  authDomain: "ch-mimeow.firebaseapp.com",
-  projectId: "ch-mimeow",
-  storageBucket: "ch-mimeow.firebasestorage.app",
-  messagingSenderId: "633558087640",
-  appId: "1:633558087640:web:b4aca508115aff9ad224ad"
-};
+            apiKey: "AIzaSyBVlLiHWQQ7Sr-d_Rwdavwjojp2IXH_Gug",
+            authDomain: "ch-mimeow.firebaseapp.com",
+            projectId: "ch-mimeow",
+            storageBucket: "ch-mimeow.firebasestorage.app",
+            messagingSenderId: "633558087640",
+            appId: "1:633558087640:web:b4aca508115aff9ad224ad"
+        };
 
         // 初始化 Firebase
         const app = initializeApp(firebaseConfig);
