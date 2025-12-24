@@ -221,8 +221,8 @@ function showLoginPage() {
     <div class="submission-notice">有興趣投稿請到 DC 聯絡 CH-時</div>
     ${!canVote ? `<div class="error">${votingStatus.message}<br>${votingStatus.status === 'notStarted' && settings.votingStartTime ? `開始時間：${new Date(settings.votingStartTime).toLocaleString('zh-TW')}` : ''} ${votingStatus.status === 'ended' && settings.votingEndTime ? `結束時間：${new Date(settings.votingEndTime).toLocaleString('zh-TW')}` : ''}</div>` : ''}
     <div class="input-group">
-      <label>請輸入你的姓名</label>
-      <input type="text" id="userName" placeholder="輸入姓名" ${canVote ? '' : 'disabled'}>
+      <label>請輸入遊戲內的姓名</label>
+      <input type="text" id="userName" placeholder="小時" ${canVote ? '' : 'disabled'}>
     </div>
     <button onclick="window.userLogin()" ${canVote ? '' : 'disabled'}>${canVote ? '🎁 開始投票' : '❌ 投票未開放'}</button>
     <button class="secondary-btn" onclick="window.showAdminLogin()">⚙️ 後台管理</button>
