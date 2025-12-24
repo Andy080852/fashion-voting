@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CH X 咪喵 第一屆-我要做MODEL</title>
+    <title>🎄 CH X 咪喵 第一屆-我要做MODEL</title>
     <style>
         * {
             margin: 0;
@@ -12,52 +12,160 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Comic Sans MS', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #ffe66d 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 雪花背景 */
+        body::before {
+            content: '❄️ ⭐ 🎄 ❄️ ⭐ 🎄 ❄️ ⭐ 🎄 ❄️ ⭐ 🎄';
+            position: fixed;
+            top: -50px;
+            left: 0;
+            right: 0;
+            font-size: 30px;
+            opacity: 0.3;
+            animation: snowfall 20s linear infinite;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        @keyframes snowfall {
+            0% { transform: translateY(0) translateX(0); }
+            100% { transform: translateY(100vh) translateX(100px); }
         }
 
         .container {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2), 0 0 0 8px #ff6b6b, 0 0 0 16px #4ecdc4;
             padding: 40px;
             max-width: 500px;
             width: 100%;
-            animation: fadeIn 0.5s ease-in;
+            animation: fadeIn 0.5s ease-in, float 3s ease-in-out infinite;
+            position: relative;
         }
 
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(-20px);
+                transform: translateY(-20px) scale(0.9);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0) scale(1);
             }
         }
 
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* 聖誕裝飾 */
+        .container::before {
+            content: '🎄';
+            position: absolute;
+            top: -30px;
+            left: 20px;
+            font-size: 50px;
+            animation: wiggle 2s ease-in-out infinite;
+        }
+
+        .container::after {
+            content: '🎅';
+            position: absolute;
+            top: -30px;
+            right: 20px;
+            font-size: 50px;
+            animation: wiggle 2s ease-in-out infinite 0.5s;
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
         h1 {
-            color: #667eea;
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #ffe66d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             text-align: center;
-            margin-bottom: 30px;
-            font-size: 28px;
+            margin-bottom: 20px;
+            font-size: 26px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        h1::before {
+            content: '⭐';
+            position: absolute;
+            left: 0;
+            animation: twinkle 1.5s ease-in-out infinite;
+        }
+
+        h1::after {
+            content: '⭐';
+            position: absolute;
+            right: 0;
+            animation: twinkle 1.5s ease-in-out infinite 0.75s;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
         }
 
         .theme-display {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
             color: white;
             padding: 20px;
-            border-radius: 15px;
+            border-radius: 20px;
             text-align: center;
             margin-bottom: 30px;
             font-size: 20px;
             font-weight: bold;
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-display::before {
+            content: '🎁';
+            position: absolute;
+            left: 10px;
+            font-size: 30px;
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        .theme-display::after {
+            content: '🎁';
+            position: absolute;
+            right: 10px;
+            font-size: 30px;
+            animation: bounce 1s ease-in-out infinite 0.5s;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
         .input-group {
@@ -66,42 +174,72 @@
 
         label {
             display: block;
-            color: #555;
+            color: #ff6b6b;
             margin-bottom: 8px;
-            font-weight: 500;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        label::before {
+            content: '🐰 ';
         }
 
         input {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
+            padding: 15px;
+            border: 3px solid #4ecdc4;
+            border-radius: 20px;
             font-size: 16px;
-            transition: border-color 0.3s;
+            transition: all 0.3s;
+            background: #fff;
+            font-family: 'Comic Sans MS', sans-serif;
         }
 
         input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #ff6b6b;
+            box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.2);
+            transform: scale(1.02);
         }
 
         button {
             width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 18px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 25px;
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin-bottom: 10px;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:hover::before {
+            width: 300px;
+            height: 300px;
         }
 
         button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(255, 107, 107, 0.4);
         }
 
         button:active {
@@ -109,7 +247,12 @@
         }
 
         .secondary-btn {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            box-shadow: 0 8px 20px rgba(78, 205, 196, 0.3);
+        }
+
+        .secondary-btn:hover {
+            box-shadow: 0 12px 30px rgba(78, 205, 196, 0.4);
         }
 
         .voting-container {
@@ -121,8 +264,9 @@
             justify-content: space-around;
             margin-bottom: 30px;
             padding: 20px;
-            background: #f8f9fa;
-            border-radius: 15px;
+            background: linear-gradient(135deg, #ffe66d 0%, #ffb347 100%);
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(255, 230, 109, 0.3);
         }
 
         .stat-item {
@@ -130,14 +274,22 @@
         }
 
         .stat-number {
-            font-size: 32px;
+            font-size: 36px;
             font-weight: bold;
-            color: #667eea;
+            color: #ff6b6b;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
 
         .stat-label {
             color: #666;
             margin-top: 5px;
+            font-weight: bold;
         }
 
         .images-container {
@@ -150,13 +302,17 @@
             flex: 1;
             position: relative;
             cursor: pointer;
-            border-radius: 15px;
+            border-radius: 20px;
             overflow: hidden;
-            transition: transform 0.3s;
+            transition: all 0.3s;
+            border: 4px solid #4ecdc4;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
 
         .image-option:hover {
-            transform: scale(1.05);
+            transform: scale(1.08) rotate(2deg);
+            border-color: #ff6b6b;
+            box-shadow: 0 12px 30px rgba(255, 107, 107, 0.4);
         }
 
         .image-option img {
@@ -170,26 +326,35 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(0,0,0,0.7);
+            background: linear-gradient(to top, rgba(255, 107, 107, 0.95), transparent);
             color: white;
-            padding: 10px;
+            padding: 15px;
             text-align: center;
+            font-weight: bold;
+            font-size: 16px;
         }
 
         .admin-container {
-            max-width: 800px;
+            max-width: 900px;
         }
 
         .admin-section {
             margin-bottom: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 15px;
+            padding: 25px;
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border-radius: 20px;
+            border: 3px solid #4ecdc4;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
         }
 
         .admin-section h2 {
-            color: #667eea;
-            margin-bottom: 15px;
+            color: #ff6b6b;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .admin-section h2::before {
+            content: '🎄 ';
         }
 
         .submissions-grid {
@@ -201,9 +366,17 @@
 
         .submission-card {
             background: white;
-            border-radius: 10px;
+            border-radius: 15px;
             padding: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 3px solid #ffe66d;
+            transition: all 0.3s;
+        }
+
+        .submission-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+            border-color: #ff6b6b;
         }
 
         .submission-card img {
@@ -212,17 +385,19 @@
             object-fit: cover;
             border-radius: 10px;
             margin-bottom: 10px;
+            border: 2px solid #4ecdc4;
         }
 
         .submission-info {
             font-size: 14px;
             color: #666;
             margin: 5px 0;
+            font-weight: bold;
         }
 
         .delete-btn {
             background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
-            padding: 8px 15px;
+            padding: 10px 15px;
             font-size: 14px;
             margin-top: 10px;
         }
@@ -234,30 +409,38 @@
         .leaderboard-item {
             display: flex;
             align-items: center;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
+            padding: 20px;
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border-radius: 20px;
             margin-bottom: 15px;
-            transition: transform 0.2s;
+            transition: all 0.3s;
+            border: 3px solid #4ecdc4;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
         .leaderboard-item:hover {
-            transform: translateX(5px);
+            transform: translateX(10px);
+            border-color: #ff6b6b;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
         }
 
         .rank {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
-            color: #667eea;
-            width: 50px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffe66d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            width: 60px;
         }
 
         .leaderboard-image {
             width: 80px;
             height: 80px;
             object-fit: cover;
-            border-radius: 10px;
+            border-radius: 15px;
             margin-right: 15px;
+            border: 3px solid #4ecdc4;
         }
 
         .leaderboard-info {
@@ -267,42 +450,64 @@
         .leaderboard-title {
             font-weight: bold;
             margin-bottom: 5px;
+            color: #ff6b6b;
+            font-size: 18px;
         }
 
         .leaderboard-score {
             color: #666;
+            font-weight: bold;
         }
 
         .loading {
             text-align: center;
             padding: 40px;
-            color: #667eea;
-            font-size: 18px;
+            color: #ff6b6b;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .loading::before {
+            content: '🎄 ';
+            animation: spin 2s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .error {
-            background: #fee;
-            color: #c33;
-            padding: 15px;
-            border-radius: 10px;
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            color: #c62828;
+            padding: 18px;
+            border-radius: 15px;
             margin-bottom: 20px;
             text-align: center;
+            font-weight: bold;
+            border: 3px solid #ef5350;
+            box-shadow: 0 4px 15px rgba(198, 40, 40, 0.2);
+        }
+
+        .error::before {
+            content: '❌ ';
         }
 
         .success {
-            background: #efe;
-            color: #3c3;
-            padding: 15px;
-            border-radius: 10px;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            color: #2e7d32;
+            padding: 18px;
+            border-radius: 15px;
             margin-bottom: 20px;
             text-align: center;
+            font-weight: bold;
+            border: 3px solid #66bb6a;
+            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.2);
         }
 
-        .toggle-images-btn {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            padding: 10px 20px;
-            font-size: 14px;
-            margin-bottom: 20px;
+        .success::before {
+            content: '✨ ';
         }
 
         .hidden {
@@ -323,43 +528,86 @@
 
         .file-input-label {
             display: block;
-            padding: 12px;
-            background: #f8f9fa;
-            border: 2px dashed #667eea;
-            border-radius: 10px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffe66d 0%, #ffb347 100%);
+            border: 3px dashed #ff6b6b;
+            border-radius: 15px;
             text-align: center;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.3s;
+            font-weight: bold;
+            color: #ff6b6b;
         }
 
         .file-input-label:hover {
-            background: #e8e9fa;
+            background: linear-gradient(135deg, #ffb347 0%, #ffe66d 100%);
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
         }
 
         .preview-image {
             max-width: 100%;
             max-height: 300px;
             margin-top: 15px;
-            border-radius: 10px;
+            border-radius: 15px;
+            border: 4px solid #4ecdc4;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
         .user-info {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
+            background: linear-gradient(135deg, #ffe66d 0%, #ffb347 100%);
+            padding: 20px;
+            border-radius: 20px;
             margin-bottom: 20px;
             text-align: center;
+            font-weight: bold;
+            color: #ff6b6b;
+            font-size: 18px;
+            border: 3px solid #ff6b6b;
+            box-shadow: 0 4px 15px rgba(255, 230, 109, 0.3);
+        }
+
+        .user-info::before {
+            content: '🎅 ';
         }
 
         .logout-btn {
             background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
-            padding: 10px 20px;
+            padding: 12px 25px;
             font-size: 14px;
             margin-top: 10px;
+            display: inline-block;
+            width: auto;
+        }
+
+        /* 聖誕彩燈效果 */
+        @keyframes lights {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .christmas-lights {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: repeating-linear-gradient(
+                90deg,
+                #ff6b6b 0px,
+                #ff6b6b 20px,
+                #4ecdc4 20px,
+                #4ecdc4 40px,
+                #ffe66d 40px,
+                #ffe66d 60px
+            );
+            animation: lights 2s ease-in-out infinite;
+            z-index: 1000;
         }
     </style>
 </head>
 <body>
+    <div class="christmas-lights"></div>
     <div id="app" class="container">
         <div class="loading">載入中...</div>
     </div>
@@ -370,7 +618,7 @@
         import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-        // Firebase 配置 - 使用正確的配置
+        // Firebase 配置
         const firebaseConfig = {
             apiKey: "AIzaSyBVlLiHWQQ7Sr-d_Rwdavwjojp2IXH_Gug",
             authDomain: "ch-mimeow.firebaseapp.com",
@@ -395,7 +643,6 @@
         // 初始化應用
         async function initApp() {
             try {
-                // 監聽認證狀態
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         currentAdmin = user;
@@ -420,9 +667,8 @@
                 if (settingsDoc.exists()) {
                     settings = settingsDoc.data();
                 } else {
-                    // 創建預設設定
                     settings = {
-                        theme: '夏日海灘風',
+                        theme: '🎄 Chiikawa 聖誕特輯 ❄️',
                         maxVotes: 5,
                         maxRefreshes: 15,
                         showLeaderboardImages: false
@@ -440,15 +686,15 @@
             const app = document.getElementById('app');
             app.className = 'container';
             app.innerHTML = `
-                <h1>CH X 咪喵 第一屆-我要做MODEL</h1>
-                ${settings ? `<div class="theme-display">本季主題：${settings.theme}</div>` : ''}
+                <h1>🎄 CH X 咪喵 第一屆<br>我要做MODEL 🎅</h1>
+                ${settings ? `<div class="theme-display">${settings.theme}</div>` : ''}
                 <div class="input-group">
                     <label>請輸入你的姓名</label>
                     <input type="text" id="userName" placeholder="輸入姓名">
                 </div>
-                <button onclick="window.userLogin()">開始投票</button>
-                <button class="secondary-btn" onclick="window.showAdminLogin()">後台管理</button>
-                <button class="secondary-btn" onclick="window.showLeaderboard()">查看排行榜</button>
+                <button onclick="window.userLogin()">🎁 開始投票</button>
+                <button class="secondary-btn" onclick="window.showAdminLogin()">⚙️ 後台管理</button>
+                <button class="secondary-btn" onclick="window.showLeaderboard()">🏆 查看排行榜</button>
             `;
         }
 
@@ -461,12 +707,10 @@
             }
 
             try {
-                // 檢查用戶是否存在
                 const userDoc = await getDoc(doc(db, 'users', userName));
                 if (userDoc.exists()) {
                     currentUser = userDoc.data();
                 } else {
-                    // 創建新用戶
                     currentUser = {
                         name: userName,
                         votesRemaining: settings.maxVotes,
@@ -486,7 +730,7 @@
         window.showAdminLogin = function() {
             const app = document.getElementById('app');
             app.innerHTML = `
-                <h1>後台管理登入</h1>
+                <h1>🎄 後台管理登入 🎅</h1>
                 <div class="input-group">
                     <label>Email</label>
                     <input type="email" id="adminEmail" placeholder="輸入管理員 Email">
@@ -495,8 +739,8 @@
                     <label>密碼</label>
                     <input type="password" id="adminPassword" placeholder="輸入密碼">
                 </div>
-                <button onclick="window.adminLogin()">登入</button>
-                <button class="secondary-btn" onclick="window.backToLogin()">返回</button>
+                <button onclick="window.adminLogin()">🎁 登入</button>
+                <button class="secondary-btn" onclick="window.backToLogin()">↩️ 返回</button>
             `;
         };
 
@@ -512,7 +756,6 @@
 
             try {
                 await signInWithEmailAndPassword(auth, email, password);
-                // onAuthStateChanged 會自動處理後續
             } catch (error) {
                 console.error('登入失敗:', error);
                 if (error.code === 'auth/invalid-credential') {
@@ -538,7 +781,6 @@
 
         // 顯示投票頁面
         async function showVotingPage() {
-            // 載入所有作品
             const submissionsSnapshot = await getDocs(collection(db, 'submissions'));
             submissions = submissionsSnapshot.docs.map(doc => ({
                 id: doc.id,
@@ -548,23 +790,23 @@
             const app = document.getElementById('app');
             app.className = 'container';
             app.innerHTML = `
-                <h1>投票系統</h1>
+                <h1>🎄 投票系統 🎅</h1>
                 <div class="user-info">
-                    <strong>${currentUser.name}</strong>
+                    ${currentUser.name}
                 </div>
                 <div class="stats">
                     <div class="stat-item">
                         <div class="stat-number">${currentUser.votesRemaining}</div>
-                        <div class="stat-label">剩餘票數</div>
+                        <div class="stat-label">🎁 剩餘票數</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-number">${currentUser.refreshesRemaining}</div>
-                        <div class="stat-label">刷新次數</div>
+                        <div class="stat-label">🔄 刷新次數</div>
                     </div>
                 </div>
                 <div id="votingArea"></div>
                 <button onclick="window.refreshPair()">🔄 換一對</button>
-                <button class="secondary-btn" onclick="window.backToLogin()">登出</button>
+                <button class="secondary-btn" onclick="window.backToLogin()">↩️ 登出</button>
             `;
 
             loadNewPair();
@@ -584,7 +826,6 @@
                 return;
             }
 
-            // 隨機選擇兩個不同的作品
             let pair;
             let attempts = 0;
             do {
@@ -614,12 +855,10 @@
         // 投票
         window.vote = async function(winnerId, loserId) {
             try {
-                // 更新作品分數
                 await updateDoc(doc(db, 'submissions', winnerId), {
                     score: increment(1)
                 });
 
-                // 更新用戶資料
                 currentUser.votesRemaining--;
                 currentUser.votedPairs.push(`${winnerId}-${loserId}`);
                 await updateDoc(doc(db, 'users', currentUser.name), {
@@ -661,7 +900,6 @@
             const app = document.getElementById('app');
             app.className = 'container admin-container';
 
-            // 載入所有作品
             const submissionsSnapshot = await getDocs(collection(db, 'submissions'));
             submissions = submissionsSnapshot.docs.map(doc => ({
                 id: doc.id,
@@ -669,9 +907,9 @@
             }));
 
             app.innerHTML = `
-                <h1>後台管理</h1>
+                <h1>🎄 後台管理 🎅</h1>
                 <div class="user-info">
-                    <strong>${currentAdmin.email}</strong>
+                    ${currentAdmin.email}
                     <button class="logout-btn" onclick="window.adminLogout()">登出</button>
                 </div>
 
@@ -681,7 +919,7 @@
                         <label>當前主題</label>
                         <input type="text" id="themeInput" value="${settings.theme}">
                     </div>
-                    <button onclick="window.updateTheme()">更新主題</button>
+                    <button onclick="window.updateTheme()">🎁 更新主題</button>
                 </div>
 
                 <div class="admin-section">
@@ -700,7 +938,7 @@
                         </div>
                         <img id="imagePreview" class="preview-image hidden">
                     </div>
-                    <button onclick="window.uploadSubmission()">上傳作品</button>
+                    <button onclick="window.uploadSubmission()">🎁 上傳作品</button>
                 </div>
 
                 <div class="admin-section">
@@ -710,8 +948,8 @@
                             <div class="submission-card">
                                 <img src="${sub.imageUrl}" alt="${sub.title}">
                                 <div class="submission-info"><strong>${sub.title}</strong></div>
-                                <div class="submission-info">分數: ${sub.score || 0}</div>
-                                <button class="delete-btn" onclick="window.deleteSubmission('${sub.id}', '${sub.imageUrl}')">刪除</button>
+                                <div class="submission-info">⭐ 分數: ${sub.score || 0}</div>
+                                <button class="delete-btn" onclick="window.deleteSubmission('${sub.id}', '${sub.imageUrl}')">🗑️ 刪除</button>
                             </div>
                         `).join('')}
                     </div>
@@ -773,13 +1011,11 @@
             try {
                 showSuccess('上傳中...');
 
-                // 上傳圖片到 Storage
                 const timestamp = Date.now();
                 const storageRef = ref(storage, `submissions/${timestamp}_${imageFile.name}`);
                 await uploadBytes(storageRef, imageFile);
                 const imageUrl = await getDownloadURL(storageRef);
 
-                // 儲存到 Firestore
                 const submissionData = {
                     title: title,
                     imageUrl: imageUrl,
@@ -803,11 +1039,8 @@
             }
 
             try {
-                // 從 Storage 刪除圖片
                 const imageRef = ref(storage, imageUrl);
                 await deleteObject(imageRef);
-
-                // 從 Firestore 刪除資料
                 await deleteDoc(doc(db, 'submissions', id));
 
                 showSuccess('刪除成功！');
@@ -823,7 +1056,6 @@
             try {
                 showSuccess('正在更新排行榜...');
 
-                // 獲取所有作品並按分數排序
                 const q = query(collection(db, 'submissions'), orderBy('score', 'desc'), limit(10));
                 const snapshot = await getDocs(q);
 
@@ -832,7 +1064,6 @@
                     ...doc.data()
                 }));
 
-                // 儲存排行榜
                 await setDoc(doc(db, 'settings', 'leaderboard'), {
                     data: leaderboard,
                     updatedAt: Date.now()
@@ -855,9 +1086,9 @@
 
                 if (!leaderboardDoc.exists() || !leaderboardDoc.data().data) {
                     app.innerHTML = `
-                        <h1>排行榜</h1>
+                        <h1>🏆 排行榜 🎄</h1>
                         <div class="error">暫無排行數據</div>
-                        <button class="secondary-btn" onclick="window.backToLogin()">返回</button>
+                        <button class="secondary-btn" onclick="window.backToLogin()">↩️ 返回</button>
                     `;
                     return;
                 }
@@ -866,18 +1097,18 @@
                 const showImages = settings.showLeaderboardImages;
 
                 app.innerHTML = `
-                    <h1>排行榜</h1>
+                    <h1>🏆 排行榜 🎄</h1>
                     ${leaderboard.map(item => `
                         <div class="leaderboard-item">
                             <div class="rank">#${item.rank}</div>
                             ${showImages ? `<img src="${item.imageUrl}" class="leaderboard-image" alt="${item.title}">` : ''}
                             <div class="leaderboard-info">
                                 <div class="leaderboard-title">${item.title}</div>
-                                <div class="leaderboard-score">得分: ${item.score || 0}</div>
+                                <div class="leaderboard-score">⭐ 得分: ${item.score || 0}</div>
                             </div>
                         </div>
                     `).join('')}
-                    <button class="secondary-btn" onclick="window.backToLogin()">返回</button>
+                    <button class="secondary-btn" onclick="window.backToLogin()">↩️ 返回</button>
                 `;
             } catch (error) {
                 console.error('載入排行榜失敗:', error);
