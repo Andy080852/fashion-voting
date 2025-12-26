@@ -608,7 +608,7 @@ window.showVoteConfirm = function(winId, loseId, imageUrl) {
     <div class="confirm-modal">
       <h2>確定投票？</h2>
       <img src="${imageUrl}" class="confirm-image" alt="作品">
-      <div class="confirm-text">確定要投給這個作品嗎？<br>投票後將無法更改！<br><br><strong>⚠️ 注意：投票後，今天將不會再看到這個作品</strong></div>
+      <div class="confirm-text">確定要投給這個作品嗎？<br>投票後將無法更改！</div>
       <div class="confirm-buttons">
         <button class="secondary-btn" onclick="window.closeModal()">❌ 取消</button>
         <button onclick="window.confirmVote('${winId}', '${loseId}')">✅ 確定投票</button>
@@ -667,7 +667,7 @@ window.confirmVote = async function(winId, loseId) {
       <div class="success-modal">
         <h2>投票成功！</h2>
         <div class="success-icon"></div>
-        <div class="success-message">🎉 你的投票已成功送出！<br>剩餘票數：${currentUser.votesRemaining}<br><br>✨ 這個作品今天不會再出現了</div>
+        <div class="success-message">🎉 你的投票已成功送出！<br>剩餘票數：${currentUser.votesRemaining}</div>
         <button onclick="window.closeModalAndRefresh()">繼續投票</button>
       </div>
     `, 3000);
