@@ -926,7 +926,7 @@ window.deleteSubmission = async function(submissionId, imagePath) {
 window.updateLeaderboard = async function() {
   try {
     showSuccess('正在更新排行榜...');
-    const q = query(collection(db, 'submissions'), orderBy('score', 'desc'), limit(10));
+    const q = query(collection(db, 'submissions'), orderBy('score', 'desc'));
     const querySnapshot = await getDocs(q);
     const leaderboardData = querySnapshot.docs.map((doc, index) => ({
       rank: index + 1,
@@ -938,7 +938,7 @@ window.updateLeaderboard = async function() {
       updatedAt: Date.now()
     });
 
-    showSuccess('排行榜更新成功！');
+    showSuccess(`排行榜更新成功！共 ${leaderboardData.length} 位參賽者`);
   } catch (error) {
     console.error('更新排行榜失敗:', error);
     showError('更新排行榜失敗');
@@ -983,22 +983,28 @@ window.showLeaderboard = async function() {
         <div class="leaderboard-notice-text">排行榜數據由管理員手動更新，<br>不會即時反映最新投票結果</div>
       </div>
       <div class="leaderboard-update-time">上次更新：${updateTimeStr}</div>
-      ${rankings.map(item => `
-        <div class="leaderboard-item">
-          <div class="rank">#${item.rank}</div>
-          ${showImages ? `<img src="${item.imageUrl}" class="leaderboard-image" alt="${item.title}">` : ''}
-          <div class="leaderboard-info">
-            <div class="leaderboard-title">${item.title}</div>
-            <div class="leaderboard-score">⭐ 得分: ${item.score || 0}</div>
+      <div class="leaderboard-update-time" style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); color: #2e7d32; border-color: #66bb6a;">
+        共 ${rankings.length} 位參賽者
+      </div>
+      <div class="leaderboard-list">
+        ${rankings.map(item => `
+          <div class="leaderboard-item">
+            <div class="rank">#${item.rank}</div>
+            ${showImages ? `<img src="${item.imageUrl}" class="leaderboard-image" alt="${item.title}">` : ''}
+            <div class="leaderboard-info">
+              <div class="leaderboard-title">${item.title}</div>
+              <div class="leaderboard-score">⭐ 得分: ${item.score || 0}</div>
+            </div>
           </div>
-        </div>
-      `).join('')}
+        `).join('')}
+      </div>
       <button class="secondary-btn" onclick="window.backToLogin()">↩️ 返回</button>
     `;
   } catch (error) {
     showError('載入排行榜失敗');
   }
 };
+
 
 window.backToLogin = function() {
   currentUser = null;
