@@ -1,5 +1,5 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getFirestore, collection, doc, getDoc, setDoc, getDocs, deleteDoc, updateDoc, increment, query, orderBy, limit, arrayUnion, arrayRemove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getFirestore, collection, doc, getDoc, setDoc, getDocs, deleteDoc, updateDoc, increment, query, orderBy, arrayUnion, arrayRemove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
 const firebaseConfig = {
@@ -27,6 +27,16 @@ let adminUser = null;
 let settings = null;
 let submissions = [];
 let githubToken = localStorage.getItem('githubToken') || '';
+
+// ✅ 新增：Fisher-Yates 洗牌算法（更好的隨機性）
+function shuffleArray(array) {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
 
 async function init() {
   try {
@@ -172,6 +182,7 @@ async function deleteImageFromGitHub(filePath) {
   }
 }
 
+// ✅ 修改：自動重置時清空 votedPairs
 async function setupAutoReset() {
   if (!adminUser) return;
 
@@ -195,7 +206,8 @@ async function setupAutoReset() {
         updatePromises.push(
           updateDoc(doc(db, 'users', userDoc.id), {
             votesRemaining: 5,
-            refreshesRemaining: 15
+            refreshesRemaining: 15,
+            votedPairs: []  // ✅ 清空投票記錄
           })
         );
       }
@@ -209,6 +221,7 @@ async function setupAutoReset() {
     }
   }, timeUntilReset);
 }
+
 function showLoginPage() {
   const app = document.getElementById('app');
   app.className = 'container';
@@ -335,7 +348,7 @@ async function showAdminPanel() {
         <p>系統將於每晚 <strong>23:59</strong> 自動執行以下操作：</p>
         <p>• 恢復所有人的剩餘票數至 <strong>5 票</strong></p>
         <p>• 恢復所有人的刷新次數至 <strong>15 次</strong></p>
-        <p>• 不會清除投票記錄</p>
+        <p>• <strong>清空投票記錄</strong>（允許重新投票給昨天投過的組合）</p>
         <p style="margin-top:10px;color:#1b5e20"><strong>✅ 自動重置已啟用</strong></p>
       </div>
       <div class="manual-reset-warning">
@@ -343,7 +356,7 @@ async function showAdminPanel() {
         <p>點擊下方按鈕可立即執行重置操作：</p>
         <p>• 恢復所有人的剩餘票數至 <strong>5 票</strong></p>
         <p>• 恢復所有人的刷新次數至 <strong>15 次</strong></p>
-        <p>• 不會清除投票記錄</p>
+        <p>• <strong>清空投票記錄</strong>（允許重新投票）</p>
       </div>
       <button class="warning-btn" onclick="window.manualResetAllUsers()">🔄 立即重置所有用戶</button>
     </div>
@@ -435,11 +448,12 @@ async function showVotingPage() {
   displayRandomPair();
 }
 
+// ✅ 改進：使用更好的隨機算法
 function displayRandomPair() {
   const votingArea = document.getElementById('votingArea');
 
   if (currentUser.votesRemaining <= 0) {
-    votingArea.innerHTML = '<div class="error">你的票數已用完！</div>';
+    votingArea.innerHTML = '<div class="error">你的票數已用完！明天會自動恢復 5 票 🎁</div>';
     return;
   }
 
@@ -448,17 +462,37 @@ function displayRandomPair() {
     return;
   }
 
+  // ✅ 計算最大可能的組合數
+  const maxPossiblePairs = submissions.length * (submissions.length - 1) / 2;
+  const maxAttempts = Math.min(100, maxPossiblePairs * 2);
+  
   let pair;
   let attempts = 0;
+  
   do {
-    const shuffled = [...submissions].sort(() => Math.random() - 0.5);
+    // ✅ 使用 Fisher-Yates 洗牌算法
+    const shuffled = shuffleArray(submissions);
     pair = [shuffled[0], shuffled[1]];
     attempts++;
+    
+    // ✅ 如果嘗試次數過多，檢查是否已投完所有組合
+    if (attempts >= maxAttempts) {
+      if (currentUser.votedPairs.length >= maxPossiblePairs) {
+        votingArea.innerHTML = '<div class="error">🎉 恭喜！你今天已經投票過所有可能的組合了！<br>明天會自動重置，屆時可以再次投票 🎁</div>';
+      } else {
+        votingArea.innerHTML = '<div class="error">暫時找不到新的組合，請點擊「換一對」重試</div>';
+      }
+      return;
+    }
   } while (
-    (currentUser.votedPairs.includes(`${pair[0].id}-${pair[1].id}`) ||
-    currentUser.votedPairs.includes(`${pair[1].id}-${pair[0].id}`)) &&
-    attempts < 10
+    currentUser.votedPairs.includes(`${pair[0].id}-${pair[1].id}`) ||
+    currentUser.votedPairs.includes(`${pair[1].id}-${pair[0].id}`)
   );
+
+  // ✅ 隨機決定左右位置（避免位置偏差）
+  if (Math.random() < 0.5) {
+    [pair[0], pair[1]] = [pair[1], pair[0]];
+  }
 
   votingArea.innerHTML = `
     <div class="images-container">
@@ -501,6 +535,7 @@ function showModal(className, content, autoClose) {
     }, autoClose);
   }
 }
+
 // ========== Window Functions ==========
 
 window.toggleCollapse = function(sectionId) {
@@ -515,8 +550,9 @@ window.toggleCollapse = function(sectionId) {
   }
 };
 
+// ✅ 修改：手動重置時清空 votedPairs
 window.manualResetAllUsers = async function() {
-  if (!confirm('⚠️ 確定要立即重置所有用戶嗎？\n\n此操作將：\n• 恢復所有人的票數至 5 票\n• 恢復所有人的刷新次數至 15 次\n• 不會清除投票記錄\n\n此操作無法復原！')) return;
+  if (!confirm('⚠️ 確定要立即重置所有用戶嗎？\n\n此操作將：\n• 恢復所有人的票數至 5 票\n• 恢復所有人的刷新次數至 15 次\n• 清空所有人的投票記錄（允許重新投票給相同組合）\n\n此操作無法復原！')) return;
   if (!confirm('再次確認：真的要立即重置所有用戶嗎？')) return;
 
   try {
@@ -528,7 +564,8 @@ window.manualResetAllUsers = async function() {
       updatePromises.push(
         updateDoc(doc(db, 'users', userDoc.id), {
           votesRemaining: 5,
-          refreshesRemaining: 15
+          refreshesRemaining: 15,
+          votedPairs: []  // ✅ 清空投票記錄
         })
       );
     }
@@ -690,9 +727,10 @@ window.adminLogout = async function() {
   }
 };
 
+// ✅ 注意：刷新不會清空 votedPairs
 window.refreshPair = async function() {
   if (currentUser.refreshesRemaining <= 0) {
-    showError('刷新次數已用完！');
+    showError('刷新次數已用完！明天會自動恢復 🔄');
     return;
   }
 
@@ -808,7 +846,6 @@ window.clearGitHubToken = function() {
   setTimeout(() => showAdminPanel(), 1000);
 };
 
-// ✅ 修正後的 previewImage 函數
 window.previewImage = function(event) {
   const selectedFile = event.target.files[0];
   if (selectedFile) {
@@ -1004,7 +1041,6 @@ window.showLeaderboard = async function() {
     showError('載入排行榜失敗');
   }
 };
-
 
 window.backToLogin = function() {
   currentUser = null;
