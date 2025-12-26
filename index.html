@@ -125,7 +125,38 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .delete-vote-btn{background:linear-gradient(135deg,#ff6b6b 0%,#ee5a6f 100%);padding:5px 12px;font-size:12px;border-radius:8px;cursor:pointer;border:none;color:white;font-weight:bold;transition:all .3s;width:auto;margin:0}
 .delete-vote-btn:hover{transform:scale(1.1);box-shadow:0 4px 15px rgba(255,107,107,.4)}
 .delete-btn{background:linear-gradient(135deg,#ff6b6b 0%,#ee5a6f 100%);padding:10px 15px;font-size:14px;margin-top:10px}
-.leaderboard-container{max-width:600px;max-height:80vh;overflow-y:auto}
+/* 排行榜容器（不滾動） */
+.leaderboard-container {
+  max-width: 600px;
+}
+
+/* 排行榜列表容器（唯一的滾動區域） */
+.leaderboard-list {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+/* 美化滾動條 */
+.leaderboard-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.leaderboard-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.leaderboard-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+  border-radius: 10px;
+}
+
+.leaderboard-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #4ecdc4 0%, #ff6b6b 100%);
+}
+
 .leaderboard-notice{background:linear-gradient(135deg,#fff3e0 0%,#ffe0b2 100%);padding:15px 20px;border-radius:15px;margin-bottom:20px;border:3px solid #ff9800;text-align:center}
 .leaderboard-notice-title{color:#e65100;font-weight:bold;font-size:16px;margin-bottom:8px}
 .leaderboard-notice-title::before{content:'⚠️ '}
