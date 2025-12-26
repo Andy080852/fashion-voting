@@ -27,8 +27,8 @@ let adminUser = null;
 let settings = null;
 let submissions = [];
 let githubToken = localStorage.getItem('githubToken') || '';
+let currentDisplayPair = null;  // ✅ 新增：記錄當前顯示的配對
 
-// ✅ 新增：Fisher-Yates 洗牌算法（更好的隨機性）
 function shuffleArray(array) {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -182,7 +182,6 @@ async function deleteImageFromGitHub(filePath) {
   }
 }
 
-// ✅ 修改：自動重置時清空 votedPairs
 async function setupAutoReset() {
   if (!adminUser) return;
 
@@ -207,7 +206,8 @@ async function setupAutoReset() {
           updateDoc(doc(db, 'users', userDoc.id), {
             votesRemaining: 5,
             refreshesRemaining: 15,
-            votedPairs: []  // ✅ 清空投票記錄
+            votedPairs: [],
+            votedWinners: []  // ✅ 清空獲勝作品記錄
           })
         );
       }
@@ -349,6 +349,7 @@ async function showAdminPanel() {
         <p>• 恢復所有人的剩餘票數至 <strong>5 票</strong></p>
         <p>• 恢復所有人的刷新次數至 <strong>15 次</strong></p>
         <p>• <strong>清空投票記錄</strong>（允許重新投票給昨天投過的組合）</p>
+        <p>• <strong>清空獲勝作品記錄</strong>（所有作品重新可見）</p>
         <p style="margin-top:10px;color:#1b5e20"><strong>✅ 自動重置已啟用</strong></p>
       </div>
       <div class="manual-reset-warning">
@@ -357,6 +358,7 @@ async function showAdminPanel() {
         <p>• 恢復所有人的剩餘票數至 <strong>5 票</strong></p>
         <p>• 恢復所有人的刷新次數至 <strong>15 次</strong></p>
         <p>• <strong>清空投票記錄</strong>（允許重新投票）</p>
+        <p>• <strong>清空獲勝作品記錄</strong>（所有作品重新可見）</p>
       </div>
       <button class="warning-btn" onclick="window.manualResetAllUsers()">🔄 立即重置所有用戶</button>
     </div>
@@ -448,7 +450,7 @@ async function showVotingPage() {
   displayRandomPair();
 }
 
-// ✅ 改進：使用更好的隨機算法
+// ✅ 新版本：加入獲勝者排除邏輯
 function displayRandomPair() {
   const votingArea = document.getElementById('votingArea');
 
@@ -462,37 +464,59 @@ function displayRandomPair() {
     return;
   }
 
-  // ✅ 計算最大可能的組合數
-  const maxPossiblePairs = submissions.length * (submissions.length - 1) / 2;
-  const maxAttempts = Math.min(100, maxPossiblePairs * 2);
-  
+  // ✅ 過濾掉已投票獲勝的作品
+  const votedWinners = currentUser.votedWinners || [];
+  const availableSubmissions = submissions.filter(s => !votedWinners.includes(s.id));
+
+  // ✅ 如果可用作品少於 2 個
+  if (availableSubmissions.length < 2) {
+    votingArea.innerHTML = '<div class="error">🎉 恭喜！你今天已經投票給所有作品了！<br>明天會自動重置，屆時可以再次投票 🎁</div>';
+    return;
+  }
+
+  // ✅ 如果有當前顯示的配對，排除這兩個作品
+  let excludeIds = [];
+  if (currentDisplayPair) {
+    excludeIds = [currentDisplayPair[0].id, currentDisplayPair[1].id];
+  }
+
+  const maxAttempts = 100;
   let pair;
   let attempts = 0;
-  
+
   do {
-    // ✅ 使用 Fisher-Yates 洗牌算法
-    const shuffled = shuffleArray(submissions);
-    pair = [shuffled[0], shuffled[1]];
-    attempts++;
+    // ✅ 從可用作品中隨機選擇
+    const shuffled = shuffleArray(availableSubmissions);
     
-    // ✅ 如果嘗試次數過多，檢查是否已投完所有組合
+    // ✅ 過濾掉需要排除的作品
+    const filtered = shuffled.filter(s => !excludeIds.includes(s.id));
+    
+    if (filtered.length < 2) {
+      // 如果過濾後不足 2 個，清空排除列表重試
+      excludeIds = [];
+      continue;
+    }
+    
+    pair = [filtered[0], filtered[1]];
+    attempts++;
+
     if (attempts >= maxAttempts) {
-      if (currentUser.votedPairs.length >= maxPossiblePairs) {
-        votingArea.innerHTML = '<div class="error">🎉 恭喜！你今天已經投票過所有可能的組合了！<br>明天會自動重置，屆時可以再次投票 🎁</div>';
-      } else {
-        votingArea.innerHTML = '<div class="error">暫時找不到新的組合，請點擊「換一對」重試</div>';
-      }
+      votingArea.innerHTML = '<div class="error">暫時找不到新的組合，請點擊「換一對」重試</div>';
       return;
     }
   } while (
+    // ✅ 確保不是已投票的組合
     currentUser.votedPairs.includes(`${pair[0].id}-${pair[1].id}`) ||
     currentUser.votedPairs.includes(`${pair[1].id}-${pair[0].id}`)
   );
 
-  // ✅ 隨機決定左右位置（避免位置偏差）
+  // ✅ 隨機決定左右位置
   if (Math.random() < 0.5) {
     [pair[0], pair[1]] = [pair[1], pair[0]];
   }
+
+  // ✅ 記錄當前顯示的配對
+  currentDisplayPair = pair;
 
   votingArea.innerHTML = `
     <div class="images-container">
@@ -550,9 +574,8 @@ window.toggleCollapse = function(sectionId) {
   }
 };
 
-// ✅ 修改：手動重置時清空 votedPairs
 window.manualResetAllUsers = async function() {
-  if (!confirm('⚠️ 確定要立即重置所有用戶嗎？\n\n此操作將：\n• 恢復所有人的票數至 5 票\n• 恢復所有人的刷新次數至 15 次\n• 清空所有人的投票記錄（允許重新投票給相同組合）\n\n此操作無法復原！')) return;
+  if (!confirm('⚠️ 確定要立即重置所有用戶嗎？\n\n此操作將：\n• 恢復所有人的票數至 5 票\n• 恢復所有人的刷新次數至 15 次\n• 清空所有人的投票記錄（允許重新投票給相同組合）\n• 清空獲勝作品記錄（所有作品重新可見）\n\n此操作無法復原！')) return;
   if (!confirm('再次確認：真的要立即重置所有用戶嗎？')) return;
 
   try {
@@ -565,7 +588,8 @@ window.manualResetAllUsers = async function() {
         updateDoc(doc(db, 'users', userDoc.id), {
           votesRemaining: 5,
           refreshesRemaining: 15,
-          votedPairs: []  // ✅ 清空投票記錄
+          votedPairs: [],
+          votedWinners: []  // ✅ 清空獲勝作品記錄
         })
       );
     }
@@ -584,7 +608,7 @@ window.showVoteConfirm = function(winId, loseId, imageUrl) {
     <div class="confirm-modal">
       <h2>確定投票？</h2>
       <img src="${imageUrl}" class="confirm-image" alt="作品">
-      <div class="confirm-text">確定要投給這個作品嗎？<br>投票後將無法更改！</div>
+      <div class="confirm-text">確定要投給這個作品嗎？<br>投票後將無法更改！<br><br><strong>⚠️ 注意：投票後，今天將不會再看到這個作品</strong></div>
       <div class="confirm-buttons">
         <button class="secondary-btn" onclick="window.closeModal()">❌ 取消</button>
         <button onclick="window.confirmVote('${winId}', '${loseId}')">✅ 確定投票</button>
@@ -598,6 +622,7 @@ window.closeModal = function() {
   if (modal) modal.remove();
 };
 
+// ✅ 修改：投票後記錄獲勝作品
 window.confirmVote = async function(winId, loseId) {
   window.closeModal();
 
@@ -622,17 +647,27 @@ window.confirmVote = async function(winId, loseId) {
 
     currentUser.votesRemaining--;
     currentUser.votedPairs.push(`${winId}-${loseId}`);
+    
+    // ✅ 記錄獲勝作品
+    if (!currentUser.votedWinners) {
+      currentUser.votedWinners = [];
+    }
+    currentUser.votedWinners.push(winId);
 
     await updateDoc(doc(db, 'users', currentUser.name), {
       votesRemaining: currentUser.votesRemaining,
-      votedPairs: currentUser.votedPairs
+      votedPairs: currentUser.votedPairs,
+      votedWinners: currentUser.votedWinners  // ✅ 儲存獲勝作品記錄
     });
+
+    // ✅ 清空當前顯示的配對
+    currentDisplayPair = null;
 
     showModal('modal-overlay', `
       <div class="success-modal">
         <h2>投票成功！</h2>
         <div class="success-icon"></div>
-        <div class="success-message">🎉 你的投票已成功送出！<br>剩餘票數：${currentUser.votesRemaining}</div>
+        <div class="success-message">🎉 你的投票已成功送出！<br>剩餘票數：${currentUser.votesRemaining}<br><br>✨ 這個作品今天不會再出現了</div>
         <button onclick="window.closeModalAndRefresh()">繼續投票</button>
       </div>
     `, 3000);
@@ -665,12 +700,17 @@ window.userLogin = async function() {
     const userDoc = await getDoc(doc(db, 'users', userName));
     if (userDoc.exists()) {
       currentUser = userDoc.data();
+      // ✅ 確保 votedWinners 存在
+      if (!currentUser.votedWinners) {
+        currentUser.votedWinners = [];
+      }
     } else {
       currentUser = {
         name: userName,
         votesRemaining: settings.maxVotes,
         refreshesRemaining: settings.maxRefreshes,
-        votedPairs: []
+        votedPairs: [],
+        votedWinners: []  // ✅ 初始化獲勝作品記錄
       };
       await setDoc(doc(db, 'users', userName), currentUser);
     }
@@ -727,7 +767,7 @@ window.adminLogout = async function() {
   }
 };
 
-// ✅ 注意：刷新不會清空 votedPairs
+// ✅ 修改：刷新時清空當前顯示配對
 window.refreshPair = async function() {
   if (currentUser.refreshesRemaining <= 0) {
     showError('刷新次數已用完！明天會自動恢復 🔄');
@@ -739,6 +779,10 @@ window.refreshPair = async function() {
     await updateDoc(doc(db, 'users', currentUser.name), {
       refreshesRemaining: currentUser.refreshesRemaining
     });
+    
+    // ✅ 清空當前顯示的配對（這樣下次就不會出現這兩個作品）
+    currentDisplayPair = null;
+    
     showVotingPage();
   } catch (error) {
     showError('刷新失敗');
@@ -1044,6 +1088,7 @@ window.showLeaderboard = async function() {
 
 window.backToLogin = function() {
   currentUser = null;
+  currentDisplayPair = null;  // ✅ 清空當前顯示配對
   showLoginPage();
 };
 
