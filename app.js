@@ -768,6 +768,7 @@ window.adminLogout = async function() {
 };
 
 // ✅ 修改：刷新時清空當前顯示配對
+// ✅ 修改後的 refreshPair 函數
 window.refreshPair = async function() {
   if (currentUser.refreshesRemaining <= 0) {
     showError('刷新次數已用完！明天會自動恢復 🔄');
@@ -780,14 +781,19 @@ window.refreshPair = async function() {
       refreshesRemaining: currentUser.refreshesRemaining
     });
     
-    // ✅ 清空當前顯示的配對（這樣下次就不會出現這兩個作品）
-    currentDisplayPair = null;
+    // ✅ 直接重新顯示配對（不清空 currentDisplayPair）
+    displayRandomPair();
     
-    showVotingPage();
+    // ✅ 更新刷新次數顯示
+    const refreshCountElement = document.querySelector('.stat-item:nth-child(2) .stat-number');
+    if (refreshCountElement) {
+      refreshCountElement.textContent = currentUser.refreshesRemaining;
+    }
   } catch (error) {
     showError('刷新失敗');
   }
 };
+
 
 window.deleteVote = async function(submissionId, voteRecord) {
   if (!confirm(`確定要刪除 ${voteRecord.voter} 的投票嗎？`)) return;
