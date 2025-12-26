@@ -450,7 +450,7 @@ async function showVotingPage() {
   displayRandomPair();
 }
 
-// ✅ 新版本：加入獲勝者排除邏輯
+// ✅ 方案 1：預先生成所有可能的組合（完全公平）
 function displayRandomPair() {
   const votingArea = document.getElementById('votingArea');
 
@@ -474,45 +474,48 @@ function displayRandomPair() {
     return;
   }
 
-  // ✅ 如果有當前顯示的配對，排除這兩個作品
-  let excludeIds = [];
-  if (currentDisplayPair) {
-    excludeIds = [currentDisplayPair[0].id, currentDisplayPair[1].id];
+  // ✅ 預先生成所有可能的組合
+  const allPossiblePairs = [];
+  for (let i = 0; i < availableSubmissions.length; i++) {
+    for (let j = i + 1; j < availableSubmissions.length; j++) {
+      const pairKey1 = `${availableSubmissions[i].id}-${availableSubmissions[j].id}`;
+      const pairKey2 = `${availableSubmissions[j].id}-${availableSubmissions[i].id}`;
+      
+      // ✅ 排除已投票的組合
+      if (!currentUser.votedPairs.includes(pairKey1) && 
+          !currentUser.votedPairs.includes(pairKey2)) {
+        allPossiblePairs.push([availableSubmissions[i], availableSubmissions[j]]);
+      }
+    }
   }
 
-  const maxAttempts = 100;
-  let pair;
-  let attempts = 0;
+  // ✅ 如果沒有可用的組合
+  if (allPossiblePairs.length === 0) {
+    votingArea.innerHTML = '<div class="error">🎉 恭喜！你今天已經投票過所有可能的組合了！<br>明天會自動重置，屆時可以再次投票 🎁</div>';
+    return;
+  }
 
-  do {
-    // ✅ 從可用作品中隨機選擇
-    const shuffled = shuffleArray(availableSubmissions);
+  // ✅ 如果有當前顯示的配對，排除包含這些作品的組合
+  let validPairs = allPossiblePairs;
+  if (currentDisplayPair) {
+    const excludeIds = [currentDisplayPair[0].id, currentDisplayPair[1].id];
+    validPairs = allPossiblePairs.filter(pair => 
+      !excludeIds.includes(pair[0].id) && !excludeIds.includes(pair[1].id)
+    );
     
-    // ✅ 過濾掉需要排除的作品
-    const filtered = shuffled.filter(s => !excludeIds.includes(s.id));
-    
-    if (filtered.length < 2) {
-      // 如果過濾後不足 2 個，清空排除列表重試
-      excludeIds = [];
-      continue;
+    // 如果過濾後沒有可用組合，使用所有組合
+    if (validPairs.length === 0) {
+      validPairs = allPossiblePairs;
     }
-    
-    pair = [filtered[0], filtered[1]];
-    attempts++;
+  }
 
-    if (attempts >= maxAttempts) {
-      votingArea.innerHTML = '<div class="error">暫時找不到新的組合，請點擊「換一對」重試</div>';
-      return;
-    }
-  } while (
-    // ✅ 確保不是已投票的組合
-    currentUser.votedPairs.includes(`${pair[0].id}-${pair[1].id}`) ||
-    currentUser.votedPairs.includes(`${pair[1].id}-${pair[0].id}`)
-  );
+  // ✅ 從可用組合中隨機選擇一個
+  const randomIndex = Math.floor(Math.random() * validPairs.length);
+  let pair = validPairs[randomIndex];
 
   // ✅ 隨機決定左右位置
   if (Math.random() < 0.5) {
-    [pair[0], pair[1]] = [pair[1], pair[0]];
+    pair = [pair[1], pair[0]];
   }
 
   // ✅ 記錄當前顯示的配對
@@ -529,6 +532,7 @@ function displayRandomPair() {
     </div>
   `;
 }
+
 
 function showError(message) {
   const app = document.getElementById('app');
