@@ -28,15 +28,8 @@ let settings = null;
 let submissions = [];
 let githubToken = localStorage.getItem('githubToken') || '';
 let currentDisplayPair = null;  // ✅ 新增：記錄當前顯示的配對
+let isNavigating = false;  // ✅ 新增：控制導航狀態
 
-function shuffleArray(array) {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
 
 async function init() {
   try {
@@ -664,19 +657,29 @@ window.confirmVote = async function(winId, loseId) {
       votedWinners: currentUser.votedWinners  // ✅ 儲存獲勝作品記錄
     });
 
-    // ✅ 清空當前顯示的配對
-    currentDisplayPair = null;
+// ✅ 清空當前顯示的配對
+currentDisplayPair = null;
 
-    showModal('modal-overlay', `
-      <div class="success-modal">
-        <h2>投票成功！</h2>
-        <div class="success-icon"></div>
-        <div class="success-message">🎉 你的投票已成功送出！<br>剩餘票數：${currentUser.votesRemaining}</div>
-        <button onclick="window.closeModalAndRefresh()">繼續投票</button>
-      </div>
-    `, 3000);
+// ✅ 設定導航標記
+isNavigating = true;
 
-    setTimeout(() => showVotingPage(), 3000);
+showModal('modal-overlay', `
+  <div class="success-modal">
+    <h2>投票成功！</h2>
+    <div class="success-icon"></div>
+    <div class="success-message">🎉 你的投票已成功送出！<br>剩餘票數：${currentUser.votesRemaining}</div>
+    <button onclick="window.closeModalAndRefresh()">繼續投票</button>
+  </div>
+`, 3000);
+
+// ✅ 3 秒後自動跳轉（如果還沒跳轉的話）
+setTimeout(() => {
+  if (isNavigating) {
+    showVotingPage();
+    isNavigating = false;
+  }
+}, 3000);
+
   } catch (error) {
     console.error('投票失敗:', error);
     showError('投票失敗，請重試');
@@ -684,9 +687,14 @@ window.confirmVote = async function(winId, loseId) {
 };
 
 window.closeModalAndRefresh = function() {
-  window.closeModal();
-  showVotingPage();
+  // ✅ 如果正在導航中，立即跳轉並取消自動跳轉
+  if (isNavigating) {
+    window.closeModal();
+    showVotingPage();
+    isNavigating = false; // ✅ 取消自動跳轉
+  }
 };
+
 
 window.userLogin = async function() {
   if (!isVotingAllowed()) {
