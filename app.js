@@ -2,6 +2,9 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, collection, doc, getDoc, setDoc, getDocs, deleteDoc, updateDoc, increment, query, orderBy, arrayUnion, arrayRemove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
+// ========== 變數宣告 ==========
+let dailyResetInterval = null;
+
 const firebaseConfig = {
   apiKey: "AIzaSyBVlLiHWQQ7Sr-d_Rwdavwjojp2IXH_Gug",
   authDomain: "ch-mimeow.firebaseapp.com",
@@ -27,9 +30,26 @@ let adminUser = null;
 let settings = null;
 let submissions = [];
 let githubToken = localStorage.getItem('githubToken') || '';
-let currentDisplayPair = null;  // ✅ 新增：記錄當前顯示的配對
-let isNavigating = false;  // ✅ 新增：控制導航狀態
+let currentDisplayPair = null;
+let isNavigating = false;
 
+// ========== 時區相關函數 ==========
+
+// ✅ 統一使用香港時區獲取日期
+function getHongKongDate() {
+  const now = new Date();
+  const hongKongTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Hong_Kong' }));
+  return hongKongTime.toDateString();
+}
+
+// ✅ 獲取香港時間的 Date 物件
+function getHongKongTime() {
+  const now = new Date();
+  const hongKongTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Hong_Kong' }));
+  return hongKongTime;
+}
+
+// ========== 初始化函數 ==========
 
 async function init() {
   try {
@@ -98,6 +118,8 @@ function getVotingStatus() {
     return { status: 'active', message: '投票進行中' };
   }
 }
+
+// ========== GitHub 相關函數 ==========
 
 async function uploadImageToGitHub(fileBlob) {
   if (!githubToken) {
@@ -175,11 +197,14 @@ async function deleteImageFromGitHub(filePath) {
   }
 }
 
+// ========== 自動重置函數 ==========
+
+// ✅ 後台管理員自動重置（使用香港時間 23:59）
 async function setupAutoReset() {
   if (!adminUser) return;
 
-  const now = new Date();
-  const targetTime = new Date();
+  const now = getHongKongTime();
+  const targetTime = new Date(now);
   targetTime.setHours(23, 59, 0, 0);
 
   if (now > targetTime) {
@@ -187,6 +212,9 @@ async function setupAutoReset() {
   }
 
   const timeUntilReset = targetTime - now;
+
+  console.log(`下次自動重置時間：${targetTime.toLocaleString('zh-TW', { timeZone: 'Asia/Hong_Kong' })}`);
+  console.log(`距離重置還有：${Math.floor(timeUntilReset / 1000 / 60)} 分鐘`);
 
   setTimeout(async () => {
     try {
@@ -200,7 +228,7 @@ async function setupAutoReset() {
             votesRemaining: 5,
             refreshesRemaining: 15,
             votedPairs: [],
-            votedWinners: []  // ✅ 清空獲勝作品記錄
+            votedWinners: []
           })
         );
       }
@@ -214,6 +242,71 @@ async function setupAutoReset() {
     }
   }, timeUntilReset);
 }
+
+// ✅ 前端用戶定時檢查（每 60 秒檢查一次日期是否改變）
+function startDailyResetCheck() {
+  if (dailyResetInterval) {
+    clearInterval(dailyResetInterval);
+  }
+
+  dailyResetInterval = setInterval(async () => {
+    if (!currentUser) {
+      clearInterval(dailyResetInterval);
+      return;
+    }
+
+    try {
+      const userDoc = await getDoc(doc(db, 'users', currentUser.name));
+      if (!userDoc.exists()) return;
+
+      const userData = userDoc.data();
+      const lastVoteDate = userData.lastVoteDate || '';
+      const today = getHongKongDate();
+
+      if (lastVoteDate !== today) {
+        console.log('檢測到日期改變，正在重置票數...');
+        
+        await updateDoc(doc(db, 'users', currentUser.name), {
+          votesRemaining: settings.maxVotes,
+          refreshesRemaining: settings.maxRefreshes,
+          votedPairs: [],
+          votedWinners: [],
+          lastVoteDate: today
+        });
+
+        currentUser.votesRemaining = settings.maxVotes;
+        currentUser.refreshesRemaining = settings.maxRefreshes;
+        currentUser.votedPairs = [];
+        currentUser.votedWinners = [];
+        currentUser.lastVoteDate = today;
+
+        updateVotesDisplay();
+        showSuccess('🎉 新的一天開始了！你的投票次數已恢復！');
+        
+        if (document.getElementById('votingArea')) {
+          showVotingPage();
+        }
+      }
+    } catch (error) {
+      console.error('定時檢查失敗:', error);
+    }
+  }, 60000);
+}
+
+// ✅ 更新票數顯示
+function updateVotesDisplay() {
+  const votesElement = document.querySelector('.stat-item:nth-child(1) .stat-number');
+  const refreshesElement = document.querySelector('.stat-item:nth-child(2) .stat-number');
+  
+  if (votesElement) {
+    votesElement.textContent = currentUser.votesRemaining;
+  }
+  if (refreshesElement) {
+    refreshesElement.textContent = currentUser.refreshesRemaining;
+  }
+}
+
+// ========== 頁面顯示函數 ==========
 
 function showLoginPage() {
   const app = document.getElementById('app');
@@ -338,12 +431,12 @@ async function showAdminPanel() {
       <h2>用戶管理</h2>
       <div class="auto-reset-info">
         <p><strong>🕐 自動重置系統</strong></p>
-        <p>系統將於每晚 <strong>23:59</strong> 自動執行以下操作：</p>
+        <p>系統將於每晚 <strong>23:59（香港時間）</strong> 自動執行以下操作：</p>
         <p>• 恢復所有人的剩餘票數至 <strong>5 票</strong></p>
         <p>• 恢復所有人的刷新次數至 <strong>15 次</strong></p>
         <p>• <strong>清空投票記錄</strong>（允許重新投票給昨天投過的組合）</p>
         <p>• <strong>清空獲勝作品記錄</strong>（所有作品重新可見）</p>
-        <p style="margin-top:10px;color:#1b5e20"><strong>✅ 自動重置已啟用</strong></p>
+        <p style="margin-top:10px;color:#1b5e20"><strong>✅ 自動重置已啟用（使用香港時區 UTC+8）</strong></p>
       </div>
       <div class="manual-reset-warning">
         <p><strong>⚠️ 手動立即重置</strong></p>
@@ -443,7 +536,6 @@ async function showVotingPage() {
   displayRandomPair();
 }
 
-// ✅ 方案 1：預先生成所有可能的組合（完全公平）
 function displayRandomPair() {
   const votingArea = document.getElementById('votingArea');
 
@@ -457,24 +549,20 @@ function displayRandomPair() {
     return;
   }
 
-  // ✅ 過濾掉已投票獲勝的作品
   const votedWinners = currentUser.votedWinners || [];
   const availableSubmissions = submissions.filter(s => !votedWinners.includes(s.id));
 
-  // ✅ 如果可用作品少於 2 個
   if (availableSubmissions.length < 2) {
     votingArea.innerHTML = '<div class="error">🎉 恭喜！你今天已經投票給所有作品了！<br>明天會自動重置，屆時可以再次投票 🎁</div>';
     return;
   }
 
-  // ✅ 預先生成所有可能的組合
   const allPossiblePairs = [];
   for (let i = 0; i < availableSubmissions.length; i++) {
     for (let j = i + 1; j < availableSubmissions.length; j++) {
       const pairKey1 = `${availableSubmissions[i].id}-${availableSubmissions[j].id}`;
       const pairKey2 = `${availableSubmissions[j].id}-${availableSubmissions[i].id}`;
       
-      // ✅ 排除已投票的組合
       if (!currentUser.votedPairs.includes(pairKey1) && 
           !currentUser.votedPairs.includes(pairKey2)) {
         allPossiblePairs.push([availableSubmissions[i], availableSubmissions[j]]);
@@ -482,13 +570,11 @@ function displayRandomPair() {
     }
   }
 
-  // ✅ 如果沒有可用的組合
   if (allPossiblePairs.length === 0) {
     votingArea.innerHTML = '<div class="error">🎉 恭喜！你今天已經投票過所有可能的組合了！<br>明天會自動重置，屆時可以再次投票 🎁</div>';
     return;
   }
 
-  // ✅ 如果有當前顯示的配對，排除包含這些作品的組合
   let validPairs = allPossiblePairs;
   if (currentDisplayPair) {
     const excludeIds = [currentDisplayPair[0].id, currentDisplayPair[1].id];
@@ -496,22 +582,18 @@ function displayRandomPair() {
       !excludeIds.includes(pair[0].id) && !excludeIds.includes(pair[1].id)
     );
     
-    // 如果過濾後沒有可用組合，使用所有組合
     if (validPairs.length === 0) {
       validPairs = allPossiblePairs;
     }
   }
 
-  // ✅ 從可用組合中隨機選擇一個
   const randomIndex = Math.floor(Math.random() * validPairs.length);
   let pair = validPairs[randomIndex];
 
-  // ✅ 隨機決定左右位置
   if (Math.random() < 0.5) {
     pair = [pair[1], pair[0]];
   }
 
-  // ✅ 記錄當前顯示的配對
   currentDisplayPair = pair;
 
   votingArea.innerHTML = `
@@ -526,6 +608,7 @@ function displayRandomPair() {
   `;
 }
 
+// ========== 工具函數 ==========
 
 function showError(message) {
   const app = document.getElementById('app');
@@ -586,7 +669,7 @@ window.manualResetAllUsers = async function() {
           votesRemaining: 5,
           refreshesRemaining: 15,
           votedPairs: [],
-          votedWinners: []  // ✅ 清空獲勝作品記錄
+          votedWinners: []
         })
       );
     }
@@ -619,7 +702,6 @@ window.closeModal = function() {
   if (modal) modal.remove();
 };
 
-// ✅ 修改：投票後記錄獲勝作品
 window.confirmVote = async function(winId, loseId) {
   window.closeModal();
 
@@ -634,7 +716,7 @@ window.confirmVote = async function(winId, loseId) {
     const voteRecord = {
       voter: currentUser.name,
       timestamp: timestamp,
-      date: new Date(timestamp).toLocaleString('zh-TW')
+      date: new Date(timestamp).toLocaleString('zh-TW', { timeZone: 'Asia/Hong_Kong' })
     };
 
     await updateDoc(doc(db, 'submissions', winId), {
@@ -645,7 +727,6 @@ window.confirmVote = async function(winId, loseId) {
     currentUser.votesRemaining--;
     currentUser.votedPairs.push(`${winId}-${loseId}`);
     
-    // ✅ 記錄獲勝作品
     if (!currentUser.votedWinners) {
       currentUser.votedWinners = [];
     }
@@ -654,31 +735,28 @@ window.confirmVote = async function(winId, loseId) {
     await updateDoc(doc(db, 'users', currentUser.name), {
       votesRemaining: currentUser.votesRemaining,
       votedPairs: currentUser.votedPairs,
-      votedWinners: currentUser.votedWinners  // ✅ 儲存獲勝作品記錄
+      votedWinners: currentUser.votedWinners,
+      lastVoteDate: getHongKongDate()
     });
 
-// ✅ 清空當前顯示的配對
-currentDisplayPair = null;
+    currentDisplayPair = null;
+    isNavigating = true;
 
-// ✅ 設定導航標記
-isNavigating = true;
+    showModal('modal-overlay', `
+      <div class="success-modal">
+        <h2>投票成功！</h2>
+        <div class="success-icon"></div>
+        <div class="success-message">🎉 你的投票已成功送出！<br>剩餘票數：${currentUser.votesRemaining}</div>
+        <button onclick="window.closeModalAndRefresh()">繼續投票</button>
+      </div>
+    `, 3000);
 
-showModal('modal-overlay', `
-  <div class="success-modal">
-    <h2>投票成功！</h2>
-    <div class="success-icon"></div>
-    <div class="success-message">🎉 你的投票已成功送出！<br>剩餘票數：${currentUser.votesRemaining}</div>
-    <button onclick="window.closeModalAndRefresh()">繼續投票</button>
-  </div>
-`, 3000);
-
-// ✅ 3 秒後自動跳轉（如果還沒跳轉的話）
-setTimeout(() => {
-  if (isNavigating) {
-    showVotingPage();
-    isNavigating = false;
-  }
-}, 3000);
+    setTimeout(() => {
+      if (isNavigating) {
+        showVotingPage();
+        isNavigating = false;
+      }
+    }, 3000);
 
   } catch (error) {
     console.error('投票失敗:', error);
@@ -687,14 +765,12 @@ setTimeout(() => {
 };
 
 window.closeModalAndRefresh = function() {
-  // ✅ 如果正在導航中，立即跳轉並取消自動跳轉
   if (isNavigating) {
     window.closeModal();
     showVotingPage();
-    isNavigating = false; // ✅ 取消自動跳轉
+    isNavigating = false;
   }
 };
-
 
 window.userLogin = async function() {
   if (!isVotingAllowed()) {
@@ -710,11 +786,34 @@ window.userLogin = async function() {
 
   try {
     const userDoc = await getDoc(doc(db, 'users', userName));
+    const today = getHongKongDate();
+    
     if (userDoc.exists()) {
       currentUser = userDoc.data();
-      // ✅ 確保 votedWinners 存在
+      
       if (!currentUser.votedWinners) {
         currentUser.votedWinners = [];
+      }
+      
+      const lastVoteDate = currentUser.lastVoteDate || '';
+      if (lastVoteDate !== today) {
+        console.log('登入時檢測到日期改變，正在重置票數...');
+        
+        currentUser.votesRemaining = settings.maxVotes;
+        currentUser.refreshesRemaining = settings.maxRefreshes;
+        currentUser.votedPairs = [];
+        currentUser.votedWinners = [];
+        currentUser.lastVoteDate = today;
+        
+        await updateDoc(doc(db, 'users', userName), {
+          votesRemaining: settings.maxVotes,
+          refreshesRemaining: settings.maxRefreshes,
+          votedPairs: [],
+          votedWinners: [],
+          lastVoteDate: today
+        });
+        
+        showSuccess('🎉 新的一天！你的投票次數已恢復！');
       }
     } else {
       currentUser = {
@@ -722,10 +821,13 @@ window.userLogin = async function() {
         votesRemaining: settings.maxVotes,
         refreshesRemaining: settings.maxRefreshes,
         votedPairs: [],
-        votedWinners: []  // ✅ 初始化獲勝作品記錄
+        votedWinners: [],
+        lastVoteDate: today
       };
       await setDoc(doc(db, 'users', userName), currentUser);
     }
+    
+    startDailyResetCheck();
     showVotingPage();
   } catch (error) {
     console.error('登入失敗:', error);
@@ -772,6 +874,11 @@ window.adminLogin = async function() {
 
 window.adminLogout = async function() {
   try {
+    if (dailyResetInterval) {
+      clearInterval(dailyResetInterval);
+      dailyResetInterval = null;
+    }
+    
     await signOut(auth);
     showLoginPage();
   } catch (error) {
@@ -779,8 +886,6 @@ window.adminLogout = async function() {
   }
 };
 
-// ✅ 修改：刷新時清空當前顯示配對
-// ✅ 修改後的 refreshPair 函數
 window.refreshPair = async function() {
   if (currentUser.refreshesRemaining <= 0) {
     showError('刷新次數已用完！明天會自動恢復 🔄');
@@ -793,10 +898,8 @@ window.refreshPair = async function() {
       refreshesRemaining: currentUser.refreshesRemaining
     });
     
-    // ✅ 直接重新顯示配對（不清空 currentDisplayPair）
     displayRandomPair();
     
-    // ✅ 更新刷新次數顯示
     const refreshCountElement = document.querySelector('.stat-item:nth-child(2) .stat-number');
     if (refreshCountElement) {
       refreshCountElement.textContent = currentUser.refreshesRemaining;
@@ -805,7 +908,6 @@ window.refreshPair = async function() {
     showError('刷新失敗');
   }
 };
-
 
 window.deleteVote = async function(submissionId, voteRecord) {
   if (!confirm(`確定要刪除 ${voteRecord.voter} 的投票嗎？`)) return;
@@ -1071,7 +1173,8 @@ window.showLeaderboard = async function() {
           day: '2-digit',
           hour: '2-digit',
           minute: '2-digit',
-          second: '2-digit'
+          second: '2-digit',
+          timeZone: 'Asia/Hong_Kong'
         })
       : '未知';
 
@@ -1105,8 +1208,13 @@ window.showLeaderboard = async function() {
 };
 
 window.backToLogin = function() {
+  if (dailyResetInterval) {
+    clearInterval(dailyResetInterval);
+    dailyResetInterval = null;
+  }
+  
   currentUser = null;
-  currentDisplayPair = null;  // ✅ 清空當前顯示配對
+  currentDisplayPair = null;
   showLoginPage();
 };
 
